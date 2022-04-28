@@ -25,10 +25,10 @@ Set Sabertooth 2x25/2x12 Dip Switches 1 and 2 Down, All Others Up
 //************************** Set speed and turn speeds here************************************//
 
 //set these 3 to whatever speeds work for you. 0-stop, 127-full speed.
-const byte DRIVESPEED1 = 50;
-const byte DRIVESPEED2 = 75;
+const byte DRIVESPEED1 = 50;//sends approxianatley 8 volts
+const byte DRIVESPEED2 = 75;//sends approxiametley 12 volts
 //Set to 0 if you only want 2 speeds.
-const byte DRIVESPEED3 = 100;
+const byte DRIVESPEED3 = 0;//Don't change until the DC/DC converter is added to the circuit
 
 byte drivespeed = DRIVESPEED1;
 
@@ -177,22 +177,25 @@ void loop(){
     }
   }*/
 
+  // Map the 360 stick values to our min/max current drive speed
+  throttleStickValue = (map(Xbox.getAnalogHat(throttleAxis, 0), -32768, 32767, -drivespeed, drivespeed));
+  
   // Change drivespeed if drive is eabled
   // Press Left Analog Stick (L3)
   // Set LEDs for speed - 1 LED, Low. 2 LED - Med. 3 LED is high
   if(Xbox.getButtonClick(speedSelectButton, 0) && isDriveEnabled) {
     //if in lowest speed
-    if(drivespeed == DRIVESPEED1){
-      //change to medium speed and play sound 3-tone
+    if(drivespeed == DRIVESPEED1 && throttleStickValue == 0){
+      //change to medium speed
       drivespeed = DRIVESPEED2;
       Xbox.setLedOn(LED2, 0);
-    } else if(drivespeed == DRIVESPEED2 && (DRIVESPEED3!=0)){
-      //change to high speed and play sound scream
+    } else if(drivespeed == DRIVESPEED2 && (DRIVESPEED3!=0) && throttleStickValue == 0){
+      //change to high speed
       drivespeed = DRIVESPEED3;
       Xbox.setLedOn(LED3, 0);
-    } else {
+    } else if(throttleStickValue == 0){
       //we must be in high speed
-      //change to low speed and play sound 2-tone
+      //change to low speed
       drivespeed = DRIVESPEED1;
       Xbox.setLedOn(LED1, 0);
     }
@@ -202,8 +205,6 @@ void loop(){
   // FOOT DRIVES
   // Xbox 360 analog stick values are signed 16 bit integer value
   // Sabertooth runs at 8 bit signed. -127 to 127 for speed (full speed reverse and  full speed forward)
-  // Map the 360 stick values to our min/max current drive speed
-  throttleStickValue = (map(Xbox.getAnalogHat(throttleAxis, 0), -32768, 32767, -drivespeed, drivespeed));
   //this is basically saying hey the stick is at this postion accelerate the motors
   if (throttleStickValue > -LEFTSTICKDEADZONE && throttleStickValue < LEFTSTICKDEADZONE) {
     // stick is in dead zone - don't drive
